@@ -53,5 +53,7 @@ for i in range(3):
 
 plt.tight_layout()
 
+
+
 # 显示图形
 plt.show()
