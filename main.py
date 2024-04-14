@@ -12,6 +12,7 @@ if not os.path.isdir('data'):
 if not os.path.isdir('data/lastRV'):
     os.mkdir('data/lastRV')
 
+
 #################################################################################
 # 
 #       给定数据
