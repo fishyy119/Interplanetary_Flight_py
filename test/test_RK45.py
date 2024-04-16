@@ -19,6 +19,6 @@ def solution(x):
     return np.sqrt(1 + 2 * x)
 
 t_span = (0, 1.4, 2)
-r, t = runge_kutta45(sample, 1, t_span, tol=1e-4, dt_init=1e-5, max_dt=1, debug=True)
+r, t = runge_kutta45(sample, 1, t_span, tol=1e-4, dt_init=1e-4, max_dt=1, debug=True)
 error = r - solution(t)
 print(f"{error}")
