@@ -4,7 +4,7 @@
     开普勒方程
     巴克方程求解
     拉格朗日系数计算
-fishyy  24.04.09 -- 24.04.12
+fishyy  24.04.09 -- 24.04.
 """
 
 import numpy as np
@@ -18,7 +18,7 @@ def two_body_dynamics(r, t, mu):
             控制器的状态向量，包含位置向量和速度向量。
             r = [x, y, z, vx, vy, vz]，其中 x、y、z 是位置坐标，vx、vy、vz 是速度分量。
         t: float
-            定常，此项未用到。
+            此项未用到。
         mu: float
             中心天体的引力常数，单位为 km^3/s^2。
 
@@ -86,16 +86,44 @@ def barkers_equation(M):
     Y = np.cbrt(X + np.sqrt(X**2 + 1))
     return 2 * np.arctan(Y - 1 / Y)
 
-def lagrange_coefficient():
+def lagrange_coefficient(mu, a, r, dr, t):
     """
     拉格朗日系数计算（级数形式）
     
     参数：
+        mu: float
+            中心天体引力常数
+        a: float
+            轨道半长轴
+        r: float
+            位置标量(t_0时)
+        dr: float
+            速度标量(t_0时)
+        t: float
+            经过时间，t_0默认为0
         
-
     返回值：
         f, g, df, dg: float
             求解出的系数值
     """
-    pass
+    f0 = 1
+    f1 = 0
+    f2 = -0.5 * mu / r**3
+    f3 = 0.5 * mu * dr / r**4
+    f4 = 0.5 * mu**2 / r**6 *(1/3 - 1/4 * r/a - 5/4 * r * dr**2/mu)
+    f5 = -0.5 * mu**2 * dr / r**7 * (1 - 3/4 * r/a - 7/4 * r * dr**2/mu)
+    
+    g0 = 0
+    g1 = 1
+    g2 = 0
+    g3 = -1/6 * mu / r**3
+    g4 = 1/4 * mu * dr / r**4
+    g5 = 1/4 * mu**2 / r**6 * (1/3 - 3/10 * r / a - 3/2 * r * dr**2 / mu)
+    
+    f = ((((f5 * t + f4) * t + f3) * t + f2) * t + f1) * t + f0
+    g = ((((g5 * t + g4) * t + g3) * t + g2) * t + g1) * t + g0
+    df = (((5*f5 * t + 4*f4) * t + 3*f3) * t + 2*f2) * t + f1
+    dg = (((5*g5 * t + 4*g4) * t + 3*g3) * t + 2*g2) * t + g1
+    
+    return f, g, df, dg
 
