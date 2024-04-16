@@ -26,9 +26,9 @@ def runge_kutta45(f, r_0, t_span, tol=1e-3, dt_init=1e-4, max_dt=-1, debug=False
             中间的不定多项指定期望求解的准确时刻。
         dt_init: float
             积分时间步长（初始值）。
-        tol: float, optional
-            容许误差。默认值为1e-6。
-        max_dt: float, optional
+        tol: float
+            容许误差。默认值为1e-3。
+        max_dt: float
             最大时间步长。默认值为(t_end-t_0)/10。
         debug: bool
             默认False，开启则输出循环信息
@@ -82,8 +82,8 @@ def runge_kutta45(f, r_0, t_span, tol=1e-3, dt_init=1e-4, max_dt=-1, debug=False
         t.append(t_next)
 
         # 如果误差不为零，则计算缩放因子
-        s = (tol * dt / (2 * eps + 1e-15)) ** (1/5)  # 根据误差和容许误差计算缩放因子，1e-15是在避免除零
-        dt *= np.min(s)  # 更新时间步长
+        s = (tol * dt / (2 * np.max(eps) + 1e-15)) ** (1/5)  # 根据误差和容许误差计算缩放因子，1e-15是在避免除零
+        dt *= s  # 更新时间步长
         dt = min(max_dt, dt)  # 限制步长
 
         if dt < np.finfo(float).eps * t_end:
@@ -99,7 +99,7 @@ def runge_kutta45(f, r_0, t_span, tol=1e-3, dt_init=1e-4, max_dt=-1, debug=False
 
     return np.array(r), np.array(t)
 
-def newton_method(func_and_dfunc, x0, tol = 1e-7, max_iter = 100):
+def newton_method(func_and_dfunc, x0, tol = 1e-10, max_iter = 100):
     """
     使用牛顿迭代法求解非线性方程。
 
@@ -110,7 +110,7 @@ def newton_method(func_and_dfunc, x0, tol = 1e-7, max_iter = 100):
         x0: float
             迭代初值。
         tol: float, optional
-            允许误差，默认值为1e-7。
+            允许误差，默认值为1e-10。
         max_iter: int, optional
             最大迭代次数，默认值为100。
 
