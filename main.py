@@ -3,7 +3,7 @@
 """
 import os
 import numpy as np
-from orbital_solving_algorithms import solve_orbit_integrate, solve_orbit_kepler
+from orbital_solving_algorithms import solve_orbit_integrate, solve_orbit_kepler, solve_orbit_lagrange
 
 # 检测数据存储文件夹
 if not os.path.isdir('data'):
@@ -61,19 +61,43 @@ r_mars = np.array([x_mars, y_mars, z_mars, vx_marx, vy_mars, vz_mars])
 def main():
     """
     可自由调用封装好的各问题求解函数
+    各函数可以使用关键字向对应数值算法传参
     各函数有前后依赖关系（依赖于data文件夹中的已保存数据）
     其中开普勒方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
     """
-    arrive_int()
+    arrive_int(tol=1e-3)
     arrive_kepler()
+    arrive_lagrange()
 
-    with_int()
-    with_kepler()
+    # with_int()
+    # with_kepler()
 
-    leave_int()
-    leave_kepler()
+    # leave_int()
+    # leave_kepler()
+    
+    
+def debug_int(func):
+    # 伪造数值积分的时间采样点
+    def wrapper(*args, **kewargs):
+        data = np.load('data/arrive_orbit_int.npz')
+        r = data['r']
+        A = data['A']
+        t = np.arange(0, day_arrive_mars * time_factor, 1e4)
+        np.savez('data/arrive_orbit_int.npz', r = r, t = t, A = A)
+        return None
+    return wrapper
+    
+def print_function_name(func):
+    # 使得函数在运行完毕后向控制台输出信息
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        print(f"'{func.__name__}'运行完成")
+        return result
+    return wrapper
 
-def arrive_int():
+# @debug_int
+@print_function_name
+def arrive_int(**kwargs):
     #################################################################################
     # 
     #       数值积分递推轨道（t_0至到达火星影响球）
@@ -81,13 +105,14 @@ def arrive_int():
     #################################################################################
     # 积分递推
     t_span = (0.0, time_factor * day_arrive_mars)
-    r_arrive_int, A_arrive_int, t_arrive_int = solve_orbit_integrate(mu_sun, r_0, t_span)
+    r_arrive_int, A_arrive_int, t_arrive_int = solve_orbit_integrate(mu_sun, r_0, t_span, **kwargs)
 
     # 保存数据到文件
     np.savez('data/arrive_orbit_int.npz', r = r_arrive_int, t = t_arrive_int, A = A_arrive_int)
     np.savez('data/lastRV/arrive_lastRV_int.npz', r = r_arrive_int[-1][0: 3], v = r_arrive_int[-1][3: ])
 
-def arrive_kepler():
+@print_function_name
+def arrive_kepler(**kwargs):
     #################################################################################
     # 
     #       开普勒方法求解轨道（t_0至到达火星影响球）
@@ -96,13 +121,30 @@ def arrive_kepler():
     # 分别对上一次积分的各个时间点求解（便于对比）
     data = np.load('data/arrive_orbit_int.npz')
     t_target = tuple(data['t'].tolist())
-    r_arrive_kepler, A_arrive_kepler, t_arrive_kepler = solve_orbit_kepler(mu_sun, r_0, t_target)
+    r_arrive_kepler, A_arrive_kepler, t_arrive_kepler = solve_orbit_kepler(mu_sun, r_0, t_target, **kwargs)
 
     # 保存数据到文件
     np.savez('data/arrive_orbit_kepler.npz', r = r_arrive_kepler, t = t_arrive_kepler, A = A_arrive_kepler)
     np.savez('data/lastRV/arrive_lastRV_kepler.npz', r = r_arrive_kepler[-1][0: 3], v = r_arrive_kepler[-1][3: ])
+    
+@print_function_name
+def arrive_lagrange(**kwargs):
+    #################################################################################
+    # 
+    #       拉格朗日法求解轨道（t_0至到达火星影响球）
+    # 
+    #################################################################################
+    # 分别对上一次积分的各个时间点求解（便于对比）
+    data = np.load('data/arrive_orbit_int.npz')
+    t_lagrange = tuple(data['t'].tolist())
+    r_arrive_lagrange, A_arrive_lagrange, t_arrive_lagrange = solve_orbit_lagrange(mu_sun, r_0, t_lagrange, **kwargs)
 
-def with_int():
+    # 保存数据到文件
+    np.savez('data/arrive_orbit_lagrange.npz', r = r_arrive_lagrange, t = t_arrive_lagrange, A = A_arrive_lagrange)
+    np.savez('data/lastRV/arrive_lastRV_lagrange.npz', r = r_arrive_lagrange[-1][0: 3], v = r_arrive_lagrange[-1][3: ])
+
+@print_function_name
+def with_int(**kwargs):
     #################################################################################
     # 
     #       数值积分递推轨道（飞进飞出火星影响球）
@@ -115,13 +157,14 @@ def with_int():
 
     # 积分递推
     t_span = (0.0, time_factor * day_with_mars)
-    r_with_int, A_with_int, t_with_int = solve_orbit_integrate(mu_mars, r_mars_relative, t_span)
+    r_with_int, A_with_int, t_with_int = solve_orbit_integrate(mu_mars, r_mars_relative, t_span, **kwargs)
 
     # 保存数据到文件
     np.savez('data/with_orbit_int.npz', r = r_with_int, t = t_with_int, A = A_with_int)
     np.savez('data/lastRV/with_lastRV_int.npz', r = r_with_int[-1][0: 3], v = r_with_int[-1][3: ])
 
-def with_kepler():
+@print_function_name
+def with_kepler(**kwargs):
     #################################################################################
     # 
     #       开普勒方法求解轨道（飞进飞出火星影响球）
@@ -135,13 +178,14 @@ def with_kepler():
     # 分别对上一次积分的各个时间点求解
     data = np.load('data/with_orbit_int.npz')
     t_target = tuple(data['t'].tolist())
-    r_with_kepler, A_with_kepler, t_with_kepler = solve_orbit_kepler(mu_mars, r_mars_relative, t_target)
+    r_with_kepler, A_with_kepler, t_with_kepler = solve_orbit_kepler(mu_mars, r_mars_relative, t_target, **kwargs)
 
     # 保存数据到文件
     np.savez('data/with_orbit_kepler.npz', r = r_with_kepler, t = t_with_kepler, A = A_with_kepler)
     np.savez('data/lastRV/with_lastRV_kepler.npz', r = r_with_kepler[-1][0: 3], v = r_with_kepler[-1][3: ])
 
-def leave_int():
+@print_function_name
+def leave_int(**kwargs):
     #################################################################################
     # 
     #       数值积分递推轨道（离开火星影响球）
@@ -154,13 +198,14 @@ def leave_int():
 
     # 积分递推
     t_span = (0.0, time_factor * day_leave_mars)
-    r_leave_int, A_leave_int, t_leave_int = solve_orbit_integrate(mu_sun, r_sun_relative, t_span)
+    r_leave_int, A_leave_int, t_leave_int = solve_orbit_integrate(mu_sun, r_sun_relative, t_span, **kwargs)
 
     # 保存数据到文件
     np.savez('data/leave_orbit_int.npz', r = r_leave_int, t = t_leave_int, A = A_leave_int)
     np.savez('data/lastRV/leave_lastRV_int.npz', r = r_leave_int[-1][0: 3], v = r_leave_int[-1][3: ])
 
-def leave_kepler():
+@print_function_name
+def leave_kepler(**kwargs):
     #################################################################################
     # 
     #       开普勒方法求解轨道（离开火星影响球）
@@ -174,7 +219,7 @@ def leave_kepler():
     # 分别对上一次积分的各个时间点求解
     data = np.load('data/leave_orbit_int.npz')
     t_target = tuple(data['t'].tolist())
-    r_leave_kepler, A_leave_kepler, t_leave_kepler = solve_orbit_kepler(mu_sun, r_sun_relative, t_target)
+    r_leave_kepler, A_leave_kepler, t_leave_kepler = solve_orbit_kepler(mu_sun, r_sun_relative, t_target, **kwargs)
 
     # 保存数据到文件
     np.savez('data/leave_orbit_kepler.npz', r = r_leave_kepler, t = t_leave_kepler, A = A_leave_kepler)
