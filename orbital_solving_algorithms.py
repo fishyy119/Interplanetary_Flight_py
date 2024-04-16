@@ -2,13 +2,14 @@
 轨道求解算法（综合调用其他基础函数）
     数值积分方法求解轨道
     开普勒方法求解轨道
-fishyy  24.04.13 -- 24.04.13
+    拉格朗日系数法求解轨道
+fishyy  24.04.13 -- 24.04.
 """
 import numpy as np
 from functools import partial
 from numerical_methods import newton_method, runge_kutta45
 from orbital_conversion import kepler_to_state, state_to_kepler, calculate_M
-from two_body_orbit_dynamics import keplers_equation_and_derivative, two_body_dynamics
+from two_body_orbit_dynamics import keplers_equation_and_derivative, two_body_dynamics, lagrange_coefficient
 
 def solve_orbit_integrate(mu, r_0, t_span, **kwargs):
     """
@@ -70,14 +71,14 @@ def solve_orbit_kepler(mu, r_0, t_target, **kwargs):
     """
     # 速度位置矢量转轨道六根数
     a, e, i, Omega, omega, f, E, M = state_to_kepler(r_0[0:3], r_0[3:], mu)
-    A = [np.array([a, e, i, Omega, omega, f, E, M])]
+    A_result = [np.array([a, e, i, Omega, omega, f, E, M])]
     if t_target[0] == 0:
-        r = [r_0]
-        t = [0]
+        r_result = [r_0]
+        t_result = [0]
         t_new_target = t_target[1:]
     else:
-        r = []
-        t = []
+        r_result = []
+        t_result = []
         t_new_target = t_target
 
     for t_end in t_new_target:
@@ -93,8 +94,62 @@ def solve_orbit_kepler(mu, r_0, t_target, **kwargs):
 
         # 轨道六根数转速度位置矢量
         r_vec_new, v_vec_new = kepler_to_state(a, e, i, Omega, omega, E_new, mu, option='E')
-        r.append(np.concatenate((r_vec_new,v_vec_new)))
-        t.append(t_end)
-        A.append(list(state_to_kepler(r_vec_new, v_vec_new, mu)))
+        r_result.append(np.concatenate((r_vec_new,v_vec_new)))
+        t_result.append(t_end)
+        A_result.append(list(state_to_kepler(r_vec_new, v_vec_new, mu)))
 
-    return np.array(r), np.array(A), np.array(t)
+    return np.array(r_result), np.array(A_result), np.array(t_result)
+
+def solve_orbit_lagrange(mu, r_0, t_target):
+    """
+    拉格朗日系数法求解轨道。
+
+    参数:
+        mu: float
+            中心天体引力常数。
+        r_0: array_like
+            初始状态向量。
+        t_target: tuple
+            递推的每一个时间节点(递增)
+
+    返回值:
+        r: array_like
+            对应时间的状态向量数组。
+        A: array_like
+            对应于每个状态向量的轨道六根数数组（由r再次反解）。
+            [a, e, i, Omega, omega, f, E, M]
+        t: array_like
+            对应于每个状态向量的时间值数组。
+    """
+    A_new = list(state_to_kepler(r_0[0:3], r_0[3:], mu))
+    a_last = A_new[0]
+    r_vec_new = r_0[0:3]
+    v_vec_new = r_0[3:]
+    r_norm = np.linalg.norm(r_0[0:3])
+    v_norm = np.linalg.norm(r_0[3:])
+    r_result = []
+    t_result = []
+    A_result = []
+    t_last = 0  # 上一次的时间节点，差值即为用于计算的时间间隔
+    
+    for t_end in t_target:
+        # 计算拉格朗日系数
+        f, g, df, dg = lagrange_coefficient(mu, a_last, r_norm, v_norm, t_end - t_last)
+        t_last = t_end
+        
+        # 根据拉格朗日系数法计算给定时间点状态(右端是上一次循环的)
+        r_vec_new = f * r_vec_new + g * v_vec_new
+        v_vec_new = df* r_vec_new + dg* v_vec_new
+        r_norm = np.linalg.norm(r_vec_new)
+        v_norm = np.linalg.norm(v_vec_new)
+        
+        # 更新半长轴
+        A_new = list(state_to_kepler(r_vec_new, v_vec_new, mu))
+        a_last = A_new[0]
+        
+        # 添加结果
+        r_result.append(np.concatenate((r_vec_new, v_vec_new)))
+        t_result.append(t_end)
+        A_result.append(A_new)
+    
+    return np.array(r_result), np.array(A_result), np.array(t_result)
