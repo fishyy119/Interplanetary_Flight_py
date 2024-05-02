@@ -180,7 +180,6 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
 
     return r_vec_I, v_vec_I
 
-
 def calculate_M(M_0, t, mu, a, e):
     """
     计算给定时刻平近点角

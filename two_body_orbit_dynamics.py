@@ -3,8 +3,9 @@
     运动微分方程  
     开普勒方程
     巴克方程求解
-    拉格朗日系数计算
-fishyy  24.04.09 -- 24.04.
+    拉格朗日系数计算(级数)
+    拉格朗日系数计算(闭合)
+fishyy  24.04.09 -- 24.05.02
 """
 
 import numpy as np
@@ -126,4 +127,41 @@ def lagrange_coefficient(mu, a, r, dr, t):
     dg = (((5*g5 * t + 4*g4) * t + 3*g3) * t + 2*g2) * t + g1
     
     return f, g, df, dg
+
+def lagrange_coefficient_2(mu, a, r, dr, delta_f):
+    """
+    拉格朗日系数计算（闭合形式）
+    
+    参数：
+        mu: float
+            中心天体引力常数
+        r: array
+            位置**矢量**(t_0时)
+        dr: array
+            速度**矢量**(t_0时)
+        delta_f: float
+            真近点角变化量
+        
+    返回值：
+        f, g, df, dg: float
+            求解出的系数值
+    """
+    h = np.linalg.norm(np.cross(r, dr))
+    r = np.linalg.norm(r)
+    dr = np.linalg.norm(dr)
+    # 此后r与dr为标量
+    
+    # 简化书写的中间变量
+    tmp_1 = h**2 / mu / r - 1
+    tmp_2 = h * dr / mu
+    tmp_cos = np.cos(delta_f)
+    tmp_sin = np.sin(delta_f)
+    
+    f = 1 - (1 - tmp_cos) / (1 + tmp_1 * tmp_cos - tmp_2 * tmp_sin)
+    g = h * r * tmp_sin / mu / (1 + tmp_1 * tmp_cos - tmp_2 * tmp_sin)
+    dg = 1 - mu * r / h**2 * (1 - tmp_cos)
+    df = (f * dg - 1) / g
+    
+    return f, g, df, dg
+
 
