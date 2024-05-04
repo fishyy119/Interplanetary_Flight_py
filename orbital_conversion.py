@@ -112,13 +112,16 @@ def E_to_f(E, e, a):
     else:
         if e < 1:
             r = a * (1 - e * np.cos(E))
+            cos_f = ((a * (1 - e**2)) / r - 1) / e
+            f = np.arccos(cos_f)
+            if np.sin(E) < 0:
+                f = 2 * np.pi - f
         elif e > 1:
             r = a * (1 - e * np.cosh(E))
-        
-        cos_f = ((a * (1 - e**2)) / r - 1) / e
-        f = np.arccos(cos_f)
-        if np.sin(E) < 0:
-            f = 2 * np.pi - f
+            cos_f = ((a * (1 - e**2)) / r - 1) / e
+            f = np.arccos(cos_f)
+            if E > 0:
+                f = 2 * np.pi - f
             
     return f
             
@@ -169,15 +172,19 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
         else:
             if e < 1:
                 r = a * (1 - e * np.cos(E))
+                cos_f = ((a * (1 - e**2)) / r - 1) / e
+                f = np.arccos(cos_f)
+                if np.sin(E) < 0:
+                    f = 2 * np.pi - f
+                sin_f = np.sin(f)
             elif e > 1:
                 r = a * (1 - e * np.cosh(E))
+                cos_f = ((a * (1 - e**2)) / r - 1) / e
+                f = np.arccos(cos_f)
+                if E > 0:
+                    f = 2 * np.pi - f
+                sin_f = np.sin(f)
     
-            cos_f = ((a * (1 - e**2)) / r - 1) / e
-            f = np.arccos(cos_f)
-            if np.sin(E) < 0:
-                f = 2 * np.pi - f
-            sin_f = np.sin(f)
-
     # 转换矩阵计算
     sin_Omega = np.sin(Omega)
     cos_Omega = np.cos(Omega)
@@ -212,7 +219,7 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
 
     return r_vec_I, v_vec_I
 
-def calculate_M(M_0, t, mu, a, e):
+def calculate_M(M_0, t, mu, a, e, prograde=True):
     """
     计算给定时刻平近点角
     
@@ -227,6 +234,8 @@ def calculate_M(M_0, t, mu, a, e):
             半长轴。
         e: float
             偏心率。
+        prograde: bool
+            是否为顺行轨道，关系到双曲线轨道的n正负，椭圆轨道无影响。
 
     返回值：
         M: float
@@ -237,6 +246,10 @@ def calculate_M(M_0, t, mu, a, e):
     """
     # 平均角速度
     n = np.sqrt(mu / np.abs(a)**3)
+    if e > 1:
+        if not prograde:
+            # 逆行双曲线轨道需要取相反数？
+            n = -n
         
     return M_0 + n * t
 
