@@ -3,7 +3,7 @@
 """
 import os
 import numpy as np
-from orbital_solving_algorithms import solve_orbit_integrate, solve_orbit_kepler, solve_orbit_lagrange
+from orbital_solving_algorithms import solve_orbit_integrate, solve_orbit_kepler, solve_orbit_lagrange, solve_orbit_lagrange_2
 
 # 检测数据存储文件夹
 if not os.path.isdir('data'):
@@ -63,11 +63,12 @@ def main():
     可自由调用封装好的各问题求解函数
     各函数可以使用关键字向对应数值算法传参
     各函数有前后依赖关系（依赖于data文件夹中的已保存数据）
-    其中开普勒方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
+    其中所有方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
     """
     arrive_int(tol=1e-3)
     arrive_kepler()
     arrive_lagrange()
+    arrive_lagrange_2()
 
     # with_int()
     # with_kepler()
@@ -131,7 +132,7 @@ def arrive_kepler(**kwargs):
 def arrive_lagrange(**kwargs):
     #################################################################################
     # 
-    #       拉格朗日法求解轨道（t_0至到达火星影响球）
+    #       拉格朗日法（级数）求解轨道（t_0至到达火星影响球）
     # 
     #################################################################################
     # 分别对上一次积分的各个时间点求解（便于对比）
@@ -142,6 +143,22 @@ def arrive_lagrange(**kwargs):
     # 保存数据到文件
     np.savez('data/arrive_orbit_lagrange.npz', r = r_arrive_lagrange, t = t_arrive_lagrange, A = A_arrive_lagrange)
     np.savez('data/lastRV/arrive_lastRV_lagrange.npz', r = r_arrive_lagrange[-1][0: 3], v = r_arrive_lagrange[-1][3: ])
+
+@print_function_name
+def arrive_lagrange_2(**kwargs):
+    #################################################################################
+    # 
+    #       拉格朗日法(闭合)求解轨道（t_0至到达火星影响球）
+    # 
+    #################################################################################
+    # 分别对上一次积分的各个时间点求解（便于对比）
+    data = np.load('data/arrive_orbit_int.npz')
+    t_lagrange = tuple(data['t'].tolist())
+    r_arrive_lagrange, A_arrive_lagrange, t_arrive_lagrange = solve_orbit_lagrange_2(mu_sun, r_0, t_lagrange, **kwargs)
+
+    # 保存数据到文件
+    np.savez('data/arrive_orbit_lagrange_2.npz', r = r_arrive_lagrange, t = t_arrive_lagrange, A = A_arrive_lagrange)
+    np.savez('data/lastRV/arrive_lastRV_lagrange_2.npz', r = r_arrive_lagrange[-1][0: 3], v = r_arrive_lagrange[-1][3: ])
 
 @print_function_name
 def with_int(**kwargs):
