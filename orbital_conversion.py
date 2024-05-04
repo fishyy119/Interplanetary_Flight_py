@@ -64,7 +64,7 @@ def state_to_kepler(r, v, mu):
         omega = 2 * np.pi - omega
     
     # 计算真近点角
-    f = angle_between_vectors(r, v)
+    f = angle_between_vectors(r, e_vec)
     if np.dot(r, v) < 0:
         f = 2 * np.pi - f
     
@@ -90,6 +90,37 @@ def state_to_kepler(r, v, mu):
         
     return a, e, i, Omega, omega, f, E, M
 
+def E_to_f(E, e, a):
+    """
+    将偏近点角转换至真近点角
+    
+    参数:
+        E: float
+            偏近点角，弧度
+        e: float
+            偏心率。
+        a: float
+            半长轴，km
+
+    返回值:
+        f: float
+            真近点角，弧度
+    """
+    if e == 1: 
+        f = 2 * np.arctan(E)
+    else:
+        if e < 1:
+            r = a * (1 - e * np.cos(E))
+        elif e > 1:
+            r = a * (1 - e * np.cosh(E))
+        
+        cos_f = ((a * (1 - e**2)) / r - 1) / e
+        f = np.arccos(cos_f)
+        if np.sin(E) < 0:
+            f = 2 * np.pi - f
+            
+    return f
+            
 def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
     """
     将轨道六根数转换为位置速度矢量。
