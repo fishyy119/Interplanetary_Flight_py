@@ -128,7 +128,7 @@ def lagrange_coefficient(mu, a, r, dr, t):
     
     return f, g, df, dg
 
-def lagrange_coefficient_2(mu, a, r, dr, delta_f):
+def lagrange_coefficient_2(mu, r, dr, delta_f):
     """
     拉格朗日系数计算（闭合形式）
     
@@ -147,20 +147,22 @@ def lagrange_coefficient_2(mu, a, r, dr, delta_f):
             求解出的系数值
     """
     h = np.linalg.norm(np.cross(r, dr))
-    r = np.linalg.norm(r)
-    dr = np.linalg.norm(dr)
-    # 此后r与dr为标量
+    r_norm = np.linalg.norm(r)
+    dr_norm = np.linalg.norm(dr)
     
     # 简化书写的中间变量
-    tmp_1 = h**2 / mu / r - 1
-    tmp_2 = h * dr / mu
+    tmp_1 = h**2 / mu / r_norm - 1
+    tmp_2 = h * dr_norm / mu
     tmp_cos = np.cos(delta_f)
     tmp_sin = np.sin(delta_f)
     
     f = 1 - (1 - tmp_cos) / (1 + tmp_1 * tmp_cos - tmp_2 * tmp_sin)
-    g = h * r * tmp_sin / mu / (1 + tmp_1 * tmp_cos - tmp_2 * tmp_sin)
-    dg = 1 - mu * r / h**2 * (1 - tmp_cos)
-    df = (f * dg - 1) / g
+    g = h * r_norm * tmp_sin / mu / (1 + tmp_1 * tmp_cos - tmp_2 * tmp_sin)
+    dg = 1 - mu * r_norm / h**2 * (1 - tmp_cos)
+    if g == 0:
+        df = 0
+    else:
+        df = (f * dg - 1) / g
     
     return f, g, df, dg
 
