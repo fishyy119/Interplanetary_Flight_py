@@ -65,10 +65,10 @@ def main():
     各函数有前后依赖关系（依赖于data文件夹中的已保存数据）
     其中所有方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
     """
-    arrive_int(tol=1e-3)
-    arrive_kepler()
-    arrive_lagrange()
-    arrive_lagrange_2()
+    # arrive_int(tol=1e-3)
+    # arrive_kepler()
+    # arrive_lagrange()
+    # arrive_lagrange_2()
 
     # with_int()
     # with_kepler()
@@ -79,7 +79,7 @@ def main():
     
 def debug_int(func):
     # 伪造数值积分的时间采样点
-    def wrapper(*args, **kewargs):
+    def wrapper(*args, **kwargs):
         data = np.load('data/arrive_orbit_int.npz')
         r = data['r']
         A = data['A']
