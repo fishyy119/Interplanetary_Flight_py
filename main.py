@@ -65,13 +65,15 @@ def main():
     各函数有前后依赖关系（依赖于data文件夹中的已保存数据）
     其中所有方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
     """
+    # orbit_earth_mars()
+    
     # arrive_int(tol=1e-3)
     # arrive_kepler()
     # arrive_lagrange()
     # arrive_lagrange_2()
 
-    # with_int()
-    # with_kepler()
+    with_int()
+    with_kepler()
 
     # leave_int()
     # leave_kepler()
@@ -95,6 +97,23 @@ def print_function_name(func):
         print(f"'{func.__name__}'运行完成")
         return result
     return wrapper
+
+@print_function_name
+def orbit_earth_mars(**kwargs):
+    #################################################################################
+    # 
+    #       地球火星轨道求解（开普勒方法）
+    # 
+    #################################################################################
+    # 求解
+    t_span_1 = np.linspace(0, 370 * time_factor, 1000)
+    r_1, A_1, t_1 = solve_orbit_kepler(mu_sun, r_earth_0, t_span_1, **kwargs)
+    t_span_2 = np.linspace(0, 700 * time_factor, 1000)
+    r_2, A_2, t_2 = solve_orbit_kepler(mu_sun, r_mars, t_span_2, **kwargs)
+
+    # 保存数据到文件
+    np.savez('data/orbit_earth.npz', r = r_1, t = t_1, A = A_1)
+    np.savez('data/orbit_mars.npz', r = r_2, t = t_2, A = A_2)
 
 # @debug_int
 @print_function_name
