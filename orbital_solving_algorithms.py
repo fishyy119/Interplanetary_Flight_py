@@ -164,7 +164,7 @@ def solve_orbit_lagrange_2(mu, r_0, t_target, **kwargs):
         r_0: array_like
             初始状态向量。
         t_target: tuple
-            求解的每一个时间节点(不是递推)
+            求解的每一个时间节点(递推)
         **kwargs: dict
             传递给 newton_method 函数的其他参数。
 
@@ -177,38 +177,44 @@ def solve_orbit_lagrange_2(mu, r_0, t_target, **kwargs):
         t: array_like
             对应于每个状态向量的时间值数组。
     """
-    # 初始参数（不递推，一直使用该参数）
+    # 初始参数（递推）
     A_new = list(state_to_kepler(r_0[0:3], r_0[3:], mu))
-    a_0 = A_new[0]
-    e_0 = A_new[1]
-    f_0 = A_new[5]
-    M_0 = A_new[7]
-    r_vec_0 = r_0[0:3]
-    v_vec_0 = r_0[3:]
+    a_new = A_new[0]
+    e_new = A_new[1]
+    f_last = A_new[5]
+    M_new = A_new[7]
+    r_vec_new = r_0[0:3]
+    v_vec_new = r_0[3:]
     r_result = []
     t_result = []
     A_result = []
+    t_last = 0
     
     for t_end in t_target:
         # 由delta_t计算delta_f
-        M_new = calculate_M(M_0, t_end, mu, a_0, e_0)
-        target_function = partial(keplers_equation_and_derivative, M=M_new, e=e_0)
-        if e_0 > 1:
-            E_new, _ = newton_method(target_function, np.log(2 * M_new / e_0), **kwargs)
+        M_new = calculate_M(M_new, t_end - t_last, mu, a_new, e_new)
+        target_function = partial(keplers_equation_and_derivative, M=M_new, e=e_new)
+        if e_new > 1:
+            E_new, _ = newton_method(target_function, np.log(2 * M_new / e_new), **kwargs)
         else:
             E_new, _ = newton_method(target_function, M_new, **kwargs)
-        f_new = E_to_f(E_new, e_0, a_0)
-        delta_f = f_new - f_0
+        f_new = E_to_f(E_new, e_new, a_new)
+        delta_f = f_new - f_last
         
         # 计算拉格朗日系数
-        f, g, df, dg = lagrange_coefficient_2(mu, r_vec_0, v_vec_0, delta_f)
+        f, g, df, dg = lagrange_coefficient_2(mu, r_vec_new, v_vec_new, delta_f)
         
         # 根据拉格朗日系数法计算给定时间点状态(右端是上一次循环的)
-        r_vec_new = f * r_vec_0 + g * v_vec_0
-        v_vec_new = df* r_vec_0 + dg* v_vec_0
+        r_vec_new = f * r_vec_new + g * v_vec_new
+        v_vec_new = df* r_vec_new + dg* v_vec_new
         
         # 更新半长轴
         A_new = list(state_to_kepler(r_vec_new, v_vec_new, mu))
+        a_new = A_new[0]
+        e_new = A_new[1]
+        f_last = A_new[5]
+        M_new = A_new[7]
+        t_last = t_end
         
         # 添加结果
         r_result.append(np.concatenate((r_vec_new, v_vec_new)))
