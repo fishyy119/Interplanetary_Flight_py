@@ -84,20 +84,30 @@ def solve_orbit_kepler(mu, r_0, t_target, **kwargs):
 
     for t_end in t_new_target:
         # 计算给定时间后平近点角
-        M_new = calculate_M(M, t_end, mu, a, e)
+        if i > np.pi / 2:
+            prograde = False
+        else:
+            prograde = True
+        M_new = calculate_M(M, t_end, mu, a, e, prograde)
 
         # 开普勒方程求解
         target_func = partial(keplers_equation_and_derivative, M=M_new, e=e)
         if e > 1: # 选取其他初值
-            E_new, _ = newton_method(target_func, np.log(2 * M_new / e), **kwargs)
+            if M_new > 0:
+                E_new, _ = newton_method(target_func, np.log(2 * M_new / e), **kwargs)
+            elif M_new < 0:
+                E_new, _ = newton_method(target_func, -np.log(-2 * M_new / e), **kwargs)
+            else:
+                E_new, _ = newton_method(target_func, M_new, **kwargs)
         else:
             E_new, _ = newton_method(target_func, M_new, **kwargs)
 
         # 轨道六根数转速度位置矢量
         r_vec_new, v_vec_new = kepler_to_state(a, e, i, Omega, omega, E_new, mu, option='E')
-        r_result.append(np.concatenate((r_vec_new,v_vec_new)))
+        r_result.append(np.concatenate((r_vec_new, v_vec_new)))
         t_result.append(t_end)
-        A_result.append(list(state_to_kepler(r_vec_new, v_vec_new, mu)))
+        A_new = list(state_to_kepler(r_vec_new, v_vec_new, mu))
+        A_result.append(A_new)
 
     return np.array(r_result), np.array(A_result), np.array(t_result)
 
