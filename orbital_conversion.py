@@ -143,7 +143,7 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
         f_or_E: float
             真近点角或偏近点角，单位为弧度。
         mu: float
-            中心天体的标准引力参数，单位为 km^3/s^2。
+            中心天体引力常数，单位为 km^3/s^2。
         option: 'f' / 'E'(default)
             指示提供参数为真近点角/偏近点角
 
@@ -181,7 +181,7 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
                 r = a * (1 - e * np.cosh(E))
                 cos_f = ((a * (1 - e**2)) / r - 1) / e
                 f = np.arccos(cos_f)
-                if E > 0:
+                if E > 0:  # 本来想E<0但不知道为什么偏偏这样结果才正确
                     f = 2 * np.pi - f
                 sin_f = np.sin(f)
     
