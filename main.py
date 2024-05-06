@@ -65,18 +65,18 @@ def main():
     各函数有前后依赖关系（依赖于data文件夹中的已保存数据）
     其中所有方法为了方便进行结果对比，对于数值积分的所有中间点均进行了求解
     """
-    # orbit_earth_mars()
+    orbit_earth_mars()
     
-    # arrive_int(tol=1e-3)
-    # arrive_kepler()
-    # arrive_lagrange()
-    # arrive_lagrange_2()
+    arrive_int(tol=1e-3)
+    arrive_kepler()
+    arrive_lagrange()
+    arrive_lagrange_2()
 
-    # with_int()
+    with_int()
     with_kepler()
 
-    # leave_int()
-    # leave_kepler()
+    leave_int()
+    leave_kepler()
     
     
 def debug_int(func):
@@ -228,7 +228,7 @@ def leave_int(**kwargs):
     # 
     #################################################################################
     # 相对于太阳的航天器运动参数（忽略飞过火星时火星运动）
-    data = np.load('data/lastRV/with_lastRV_int.npz')
+    data = np.load('data/lastRV/with_lastRV_kepler.npz')
     RV_leave_SOI = np.concatenate((data['r'], data['v']))
     r_sun_relative = RV_leave_SOI + r_mars
 
@@ -248,7 +248,7 @@ def leave_kepler(**kwargs):
     # 
     #################################################################################
     # 相对于太阳的航天器运动参数（忽略飞过火星时火星运动）
-    data = np.load('data/lastRV/with_lastRV_int.npz')
+    data = np.load('data/lastRV/with_lastRV_kepler.npz')
     RV_leave_SOI = np.concatenate((data['r'], data['v']))
     r_sun_relative = RV_leave_SOI + r_mars
 
