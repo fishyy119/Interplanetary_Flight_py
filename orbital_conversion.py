@@ -181,7 +181,7 @@ def kepler_to_state(a, e, i, Omega, omega, f_or_E, mu, option = 'E'):
                 r = a * (1 - e * np.cosh(E))
                 cos_f = ((a * (1 - e**2)) / r - 1) / e
                 f = np.arccos(cos_f)
-                if E > 0:  # 本来想E<0但不知道为什么偏偏这样结果才正确
+                if E > 0:  # ? 本来想E<0但不知道为什么偏偏这样结果才正确
                     f = 2 * np.pi - f
                 sin_f = np.sin(f)
     
@@ -248,7 +248,7 @@ def calculate_M(M_0, t, mu, a, e, prograde=True):
     n = np.sqrt(mu / np.abs(a)**3)
     if e > 1:
         if not prograde:
-            # 逆行双曲线轨道需要取相反数？
+            # ? 逆行双曲线轨道需要取相反数
             n = -n
         
     return M_0 + n * t
